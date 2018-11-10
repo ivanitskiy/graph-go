@@ -57,15 +57,19 @@ func (g *Graph) GetEdge(u, v ID) {
 }
 
 // Degre returns the number of (outgoing) edges incident to vertex v in the graph
-func (g *Graph) Degre(v ID) {
-
+func (g *Graph) Degre(v ID) int {
+	return len(g.edges[v])
 }
 
 // IncidentEdges return all (outgoing) edges incident to vertex v in the graph
-func (g *Graph) IncidentEdges(v ID) []ID {
-	incidents := make([]ID, 0)
+func (g *Graph) IncidentEdges(v ID) []Edge {
+	incidents := make([]Edge, 0)
 	for k := range g.edges[v] {
-		incidents = append(incidents, k)
+		e := &Edge{
+			from: v,
+			to:   k,
+		}
+		incidents = append(incidents, *e)
 	}
 	return incidents
 

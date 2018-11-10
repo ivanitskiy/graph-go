@@ -10,8 +10,8 @@ func DFS(g *Graph, start ID) map[ID]bool {
 func dfsRecursive(g *Graph, start ID, visited map[ID]bool) {
 	visited[start] = true
 	for _, id := range g.IncidentEdges(start) {
-		if _, ok := visited[id]; !ok {
-			dfsRecursive(g, id, visited)
+		if _, ok := visited[id.to]; !ok {
+			dfsRecursive(g, id.to, visited)
 		}
 	}
 }
