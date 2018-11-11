@@ -35,8 +35,8 @@ func (g *Graph) Vertices() []ID {
 }
 
 // EdgeCount returns the number of edges in the graph
-func (g *Graph) EdgeCount() {
-
+func (g *Graph) EdgeCount() int {
+	return len(g.Edges())
 }
 
 // Edges returns a set of all the edges in the graph
