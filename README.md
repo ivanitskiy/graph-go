@@ -1,12 +1,37 @@
 # graph-go
 
-## week 2
-###Programming Assignment #2
+Graph package for go. Provides some basic data strcutures and algorithms for Graph ADT.
 
-The file contains an adjacency list representation of an undirected weighted graph with 200 vertices labeled 1 to 200. Each row consists of the node tuples that are adjacent to that particular vertex along with the length of that edge. For example, the 6th row has 6 as the first entry indicating that this row corresponds to the vertex labeled 6. The next entry of this row "141,8200" indicates that there is an edge between vertex 6 and vertex 141 that has length 8200. The rest of the pairs of this row indicate the other vertices adjacent to vertex 6 and the lengths of the corresponding edges.
+## Graph data structures
+Support for simple graph labled with `int`. Directed, Undercted and weighted types are supported. 
+* 
 
-Your task is to run Dijkstra's shortest-path algorithm on this graph, using 1 (the first vertex) as the source vertex, and to compute the shortest-path distances between 1 and every other vertex of the graph. If there is no path between a vertex vv and vertex 1, we'll define the shortest-path distance between 1 and vv to be 1000000.
+## Algorithms
 
-You should report the shortest-path distances to the following ten vertices, in order: 7,37,59,82,99,115,133,165,188,197. You should encode the distances as a comma-separated string of integers. So if you find that all ten of these vertices except 115 are at distance 1000 away from vertex 1 and 115 is 2000 distance away, then your answer should be 1000,1000,1000,1000,1000,2000,1000,1000,1000,1000. Remember the order of reporting DOES MATTER, and the string should be in the same order in which the above ten vertices are given. The string should not contain any spaces. Please type your answer in the space provided.
+List of supported methods:
 
-IMPLEMENTATION NOTES: This graph is small enough that the straightforward O(mn)O(mn) time implementation of Dijkstra's algorithm should work fine. OPTIONAL: For those of you seeking an additional challenge, try implementing the heap-based version. Note this requires a heap that supports deletions, and you'll probably need to maintain some kind of mapping between vertices and their positions in the heap.
+* DFS
+* BFS
+* SCC
+* Degree
+* EdgeCount
+* All Edges
+* GetEdge
+* IncidentEdges
+* InsertVertex
+* RemoveVertex
+* InsertEdge
+* RemoveEdge
+* Reverse
+
+
+### SCC
+
+### Dijkstra's shortest-path
+
+## Unittests
+
+```
+Coverage report
+ok  	github.com/ivanitskiy/graph-go/pkg/graph	1.511s	coverage: 41.0% of statements
+```
