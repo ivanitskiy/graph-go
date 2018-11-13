@@ -104,31 +104,42 @@ func TestGraph_Edges(t *testing.T) {
 }
 
 func TestGraph_GetEdge(t *testing.T) {
-	type fields struct {
-		vertices map[ID]struct{}
-		edges    map[ID]map[ID]struct{}
-		directed bool
-	}
-	type args struct {
-		u ID
-		v ID
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
+	g := NewGraph(true)
+	id1 := ID(1)
+	id2 := ID(2)
+	id3 := ID(3)
+	id4 := ID(4)
+
+	var edgeTests = []struct {
+		u, v  ID   // input
+		isNil bool // expected result
 	}{
-		// TODO: Add test cases.
+		{id1, id2, false},
+		{id1, id4, false},
+		{id2, id1, true},
+		{id4, id1, true},
+		//
+		{id2, id3, false},
+		{id2, id4, false},
+		{id3, id2, true},
+		{id4, id2, true},
+		//
+		{id3, id1, false},
+		{id1, id3, true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			g := &Graph{
-				vertices: tt.fields.vertices,
-				edges:    tt.fields.edges,
-				directed: tt.fields.directed,
-			}
-			g.GetEdge(tt.args.u, tt.args.v)
-		})
+
+	g.InsertEdge(id1, id2)
+	g.InsertEdge(id1, id4)
+	g.InsertEdge(id2, id3)
+	g.InsertEdge(id2, id4)
+	g.InsertEdge(id3, id1)
+
+	for _, tt := range edgeTests {
+		if tt.isNil {
+			assert.Nil(t, g.GetEdge(tt.u, tt.v), "edge should not be found")
+		} else {
+			assert.NotNil(t, g.GetEdge(tt.u, tt.v), "edge not found")
+		}
 	}
 }
 
@@ -344,6 +355,9 @@ func TestNewGraph(t *testing.T) {
 	}
 }
 
+// func checkEdge(aj AdjacencyList, u, v ID) bool {
+
+// }
 func TestGraph_Reverse(t *testing.T) {
 	t.Run("reverse the graph", func(t *testing.T) {
 
@@ -352,21 +366,45 @@ func TestGraph_Reverse(t *testing.T) {
 		id2 := ID(2)
 		id3 := ID(3)
 		id4 := ID(4)
-
 		g.InsertEdge(id1, id2)
 		g.InsertEdge(id1, id4)
 		g.InsertEdge(id2, id3)
 		g.InsertEdge(id2, id4)
 		g.InsertEdge(id3, id1)
-		t.Log(g)
 
-		assert.Len(t, g.IncidentEdges(id1), 2, "Incorrect # of edges. Should be 2")
-		g.Reverse()
-		assert.Len(t, g.IncidentEdges(id1), 1, "u not found in the vertices")
-		assert.Equal(t, g.IncidentEdges(id1)[0].From, id1, "u not found in the vertices")
-		assert.Equal(t, g.IncidentEdges(id1)[0].To, id3, "u not found in the vertices")
-		t.Log(g)
-		g.Reverse()
-		t.Log(g)
+		var reverseEdgeTests = []struct {
+			u, v  ID   // input
+			isNil bool // expected result
+		}{
+			{id1, id2, true},
+			{id1, id4, true},
+			{id2, id1, false},
+			{id4, id1, false},
+			//
+			{id2, id3, true},
+			{id2, id4, true},
+			{id3, id2, false},
+			{id4, id2, false},
+			//
+			{id3, id1, true},
+			{id1, id3, false},
+		}
+
+		revAj := g.Reverse()
+
+		revGraph := &Graph{
+			edges:    revAj,
+			directed: true,
+			vertices: g.vertices,
+		}
+
+		for _, tt := range reverseEdgeTests {
+			if tt.isNil {
+				assert.Nil(t, revGraph.GetEdge(tt.u, tt.v), "edge should not be found")
+			} else {
+				assert.NotNil(t, revGraph.GetEdge(tt.u, tt.v), "edge not found")
+			}
+		}
+
 	})
 }

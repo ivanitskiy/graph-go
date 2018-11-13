@@ -5,22 +5,20 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
-	"github.com/ivanitskiy/graph-go/pkg/stack"
+	"github.com/ivanitskiy/graph-go/pkg/graph"
 )
 
 var (
 	in       io.Reader = os.Stdin
 	out      io.Writer = os.Stdout
 	filePath string
-	leader   map[int]int
-	s        int
-	visited  map[int]bool
-	dfsStack stack.Stack
 )
 
 func checkError(e error) {
@@ -29,16 +27,18 @@ func checkError(e error) {
 	}
 }
 
-func readGraph() *graphAdjacencyList {
-	g := &graphAdjacencyList{
-		nodes:        make(map[int]struct{}),
-		edges:        make(map[int][]int),
-		reverseEdges: make(map[int][]int),
-	}
+func timeTrack(start time.Time, name string) {
+	elapsed := time.Since(start)
+	log.Printf("%s took %s", name, elapsed)
+}
+
+func newDirectedGraph() *graph.Graph {
+	defer timeTrack(time.Now(), "Reading DirectedGraph")
+	g := graph.NewGraph(true)
+
 	var scanner *bufio.Scanner
 	if filePath != "" {
 		f, err := os.Open(filePath)
-
 		checkError(err)
 		defer f.Close()
 		in = bufio.NewReader(f)
@@ -52,103 +52,31 @@ func readGraph() *graphAdjacencyList {
 		checkError(err)
 		n1, err := strconv.Atoi(sArray[1])
 		checkError(err)
-		g.InsertEdge(n0, n1)
+		g.InsertEdge(graph.ID(n0), graph.ID(n1))
 	}
-
 	return g
 }
 
-type graphAdjacencyList struct {
-	nodes        map[int]struct{}
-	edges        map[int][]int
-	reverseEdges map[int][]int
-}
-
-func (g *graphAdjacencyList) InsertEdge(u, v int) {
-	if _, ok := g.nodes[u]; !ok {
-		g.InsertNode(u)
-	}
-	if _, ok := g.nodes[v]; !ok {
-		g.InsertNode(v)
+func computeScc() {
+	defer timeTrack(time.Now(), "computeSccGrapMethod()")
+	ng := newDirectedGraph()
+	// Compute SCC
+	ngScc := make(map[graph.ID]int)
+	css := ng.SCC()
+	for _, lead := range *css {
+		ngScc[lead]++
 	}
 
-	if _, ok := g.edges[u]; !ok {
-		g.edges[u] = make([]int, 0)
+	sccList := make([]int, 0)
+	for _, v := range ngScc {
+		sccList = append(sccList, v)
 	}
-	if _, ok := g.reverseEdges[v]; !ok {
-		g.reverseEdges[v] = make([]int, 0)
-	}
-	g.edges[u] = append(g.edges[u], v)
-	g.reverseEdges[v] = append(g.reverseEdges[v], u)
-}
-
-func (g *graphAdjacencyList) InsertNode(v int) bool {
-	if _, ok := g.nodes[v]; ok {
-		return false
-	}
-	g.nodes[v] = struct{}{}
-	return true
+	sort.Sort(sort.Reverse(sort.IntSlice(sccList)))
+	fmt.Println(sccList[:5])
 }
 
 func main() {
 	flag.StringVar(&filePath, "f", "", "Path to a file. If not provided then from stdin")
 	flag.Parse()
-	g := readGraph()
-
-	visited = make(map[int]bool)
-	leader = make(map[int]int)
-
-	order := make([]int, 0)
-
-	for i := len(g.nodes); i > 0; i-- {
-		order = append(order, i)
-	}
-	sort.Sort(sort.Reverse(sort.IntSlice(order)))
-	dfsLoop(g.reverseEdges, order)
-
-	fv := make([]int, 0)
-
-	for !dfsStack.IsEmpty() {
-		value, _ := dfsStack.Pop()
-		fv = append(fv, value)
-	}
-	dfsLoop(g.edges, fv)
-
-	// Compute SCC
-	scc := make(map[int]int)
-
-	for _, lead := range leader {
-		scc[lead]++
-	}
-	sccList := make([]int, 0)
-	for _, v := range scc {
-		sccList = append(sccList, v)
-	}
-	sort.Sort(sort.Reverse(sort.IntSlice(sccList)))
-	//  Done. print result
-	// fmt.Println(scc)
-	fmt.Println(sccList[:5])
-}
-
-// DFS is dfs
-func DFS(adjacencyList map[int][]int, start int) {
-	visited[start] = true
-	leader[start] = s
-	for _, adj := range adjacencyList[start] {
-		if _, ok := visited[adj]; !ok {
-			DFS(adjacencyList, adj)
-		}
-	}
-	dfsStack.Push(start)
-}
-
-func dfsLoop(aj map[int][]int, order []int) {
-	s = 0
-	visited = make(map[int]bool)
-	for _, i := range order {
-		if _, ok := visited[i]; !ok {
-			s = i
-			DFS(aj, i)
-		}
-	}
+	computeScc()
 }

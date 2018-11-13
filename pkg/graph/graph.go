@@ -15,13 +15,13 @@ func (a byID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byID) Less(i, j int) bool { return a[i] < a[j] }
 
 // AdjacencyList Graph representation
-type AdjacencyList [][]Edge
+type AdjacencyList map[ID]map[ID]struct{}
 
 // Graph representation using an adjancency map
 // no parallel edges supported
 type Graph struct {
 	vertices map[ID]struct{}
-	edges    map[ID]map[ID]struct{}
+	edges    AdjacencyList
 	directed bool
 }
 
@@ -69,8 +69,17 @@ func (g *Graph) Edges() []Edge {
 }
 
 // GetEdge returns the edge from u to v, or nil if not adjacent
-func (g *Graph) GetEdge(u, v ID) {
-
+func (g *Graph) GetEdge(u, v ID) *Edge {
+	if endpoints, ok := g.edges[u]; ok {
+		if _, ok := endpoints[v]; ok {
+			e := &Edge{
+				From: u,
+				To:   v,
+			}
+			return e
+		}
+	}
+	return nil
 }
 
 // Degre returns the number of (outgoing) edges incident to vertex v in the graph
@@ -139,8 +148,8 @@ func (g *Graph) RemoveEdge(u, v ID) {
 	}
 }
 
-// Reverse reverts the graph
-func (g *Graph) Reverse() {
+// Reverse returns reverted adjacencyList the graph
+func (g Graph) Reverse() AdjacencyList {
 	reversedEdges := make(map[ID]map[ID]struct{})
 	for from := range g.edges {
 		for to := range g.edges[from] {
@@ -159,7 +168,7 @@ func (g *Graph) Reverse() {
 			}
 		}
 	}
-	g.edges = reversedEdges
+	return reversedEdges
 }
 
 // // TopologicalSort returns a list  of vertices of dicrected acyclic graph g in topological order

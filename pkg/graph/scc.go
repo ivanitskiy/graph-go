@@ -1,115 +1,87 @@
 package graph
 
-// import (
-// 	"fmt"
-// 	"sort"
+import (
+	"sort"
 
-// 	"github.com/ivanitskiy/graph-go/pkg/stack"
-// )
+	"github.com/ivanitskiy/graph-go/pkg/stack"
+)
 
-// func SCC(g *Graph) {
+type visitedMap map[ID]bool
 
-// 	visited := make(map[int]bool)
-// 	leader := make(map[int]int)
-// 	dfsStack := make(stack.Stack, 0)
-// 	var s = 0
+func makeDecrisingOrder(g *Graph) []ID {
+	order := make([]ID, g.VertexCount())
+	i := 0
+	for node := range g.vertices {
+		order[i] = node
+		i++
+	}
+	sort.Slice(order, func(i, j int) bool {
+		return order[i] > order[j]
+	})
+	return order
+}
 
-// 	sCCForDFS := func(adjacencyList map[int][]int, start int) {
-// 		visited[start] = true
-// 		leader[start] = s
-// 		for _, adj := range adjacencyList[start] {
-// 			if _, ok := visited[adj]; !ok {
-// 				sCCForDFS(adjacencyList, adj)
-// 			}
-// 		}
-// 		dfsStack.Push(start)
-// 	}
-// 	order := make([]ID, len(g.vertices))
+func drainStack(dfsStack *stack.Stack) []ID {
+	fv := make([]ID, len(*dfsStack))
+	i := 0
+	for !dfsStack.IsEmpty() {
+		value, _ := dfsStack.Pop()
+		fv[i] = ID(value)
+		i++
+	}
+	return fv
+}
 
-// 	for i := 1; i <= len(g.vertices)
+// SCC computes strongly connected components
+func (g *Graph) SCC() *map[ID]ID {
+	// init values
 
-// 	for i := len(g.vertices); i > 0; i-- {
-// 		order[] = append(order, i)
-// 	}
-// 	sort.Sort(sort.Reverse(sort.IntSlice(order)))
-// 	dfsLoop(ajList.reverseEdges, order)
+	// dfsStack := make(stack.Stack, 0)
+	var dfsStack stack.Stack
 
-// 	fv := make([]int, 0)
+	// invoke DFS against Reversed graph on nodes orderd by ID n to 1
+	order := makeDecrisingOrder(g)
+	dfsSCCLoop(g.Reverse(), &dfsStack, order)
 
-// 	for !dfsStack.IsEmpty() {
-// 		value, _ := dfsStack.Pop()
-// 		fv = append(fv, value)
-// 	}
-// 	dfsLoop(ajList.edges, fv)
+	order = drainStack(&dfsStack)
+	leader := dfsSCCLoop(g.edges, &dfsStack, order)
+	return leader
+}
 
-// 	// Compute SCC
-// 	scc := make(map[int]int)
+func dfsSCCLoop(aj AdjacencyList, dfsStack *stack.Stack, order []ID) *map[ID]ID {
+	leader := make(map[ID]ID)
+	var leaderNode ID
+	visited := make(visitedMap)
+	for _, source := range order {
+		if _, ok := visited[source]; !ok {
+			leaderNode = source
+			dfsSCC(
+				aj,
+				source,
+				visited,
+				leader,
+				leaderNode,
+				dfsStack)
+		}
+	}
+	return &leader
+}
 
-// 	for _, lead := range leader {
-// 		scc[lead]++
-// 	}
-// 	sccList := make([]int, 0)
-// 	for _, v := range scc {
-// 		sccList = append(sccList, v)
-// 	}
-// 	sort.Sort(sort.Reverse(sort.IntSlice(sccList)))
-// 	//  Done. print result
-// 	// fmt.Println(scc)
-// 	fmt.Println(sccList[:5])
-
-// }
-
-// type graphAdjacencyList struct {
-// 	nodes        map[int]struct{}
-// 	edges        map[int][]int
-// 	reverseEdges map[int][]int
-// }
-
-// func (g *graphAdjacencyList) InsertEdge(u, v int) {
-// 	if _, ok := g.nodes[u]; !ok {
-// 		g.InsertNode(u)
-// 	}
-// 	if _, ok := g.nodes[v]; !ok {
-// 		g.InsertNode(v)
-// 	}
-
-// 	if _, ok := g.edges[u]; !ok {
-// 		g.edges[u] = make([]int, 0)
-// 	}
-// 	if _, ok := g.reverseEdges[v]; !ok {
-// 		g.reverseEdges[v] = make([]int, 0)
-// 	}
-// 	g.edges[u] = append(g.edges[u], v)
-// 	g.reverseEdges[v] = append(g.reverseEdges[v], u)
-// }
-
-// func (g *graphAdjacencyList) InsertNode(v int) bool {
-// 	if _, ok := g.nodes[v]; ok {
-// 		return false
-// 	}
-// 	g.nodes[v] = struct{}{}
-// 	return true
-// }
-
-// // DFS is dfs
-// func sCCForDFS(adjacencyList map[int][]int, start int) {
-// 	visited[start] = true
-// 	leader[start] = s
-// 	for _, adj := range adjacencyList[start] {
-// 		if _, ok := visited[adj]; !ok {
-// 			sCCForDFS(adjacencyList, adj)
-// 		}
-// 	}
-// 	dfsStack.Push(start)
-// }
-
-// func dfsLoop(aj map[int][]int, order []int) {
-// 	s = 0
-// 	visited = make(map[int]bool)
-// 	for _, i := range order {
-// 		if _, ok := visited[i]; !ok {
-// 			s = i
-// 			sCCForDFS(aj, i)
-// 		}
-// 	}
-// }
+// dfs is depth first search on graph.
+// sets
+func dfsSCC(aj AdjacencyList, start ID, visited visitedMap, leader map[ID]ID, leaderNode ID, dfsStack *stack.Stack) {
+	visited[start] = true
+	leader[start] = leaderNode
+	for to := range aj[start] {
+		if _, ok := visited[to]; !ok {
+			dfsSCC(
+				aj,
+				to,
+				visited,
+				leader,
+				leaderNode,
+				dfsStack)
+		}
+	}
+	dfsStack.Push(int(start))
+}
