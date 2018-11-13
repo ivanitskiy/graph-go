@@ -10,13 +10,8 @@ func DFS(g *Graph, start ID) map[ID]bool {
 func dfsRecursive(g *Graph, start ID, visited map[ID]bool) {
 	visited[start] = true
 	for _, id := range g.IncidentEdges(start) {
-		if _, ok := visited[id.to]; !ok {
-			dfsRecursive(g, id.to, visited)
+		if _, ok := visited[id.To]; !ok {
+			dfsRecursive(g, id.To, visited)
 		}
 	}
-}
-
-// DFSComplete performs Depth first search of the entire Graph and returns forest as map
-func DFSComplete(g *Graph) {
-
 }

@@ -9,18 +9,18 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	// "github.com/ivanitskiy/graph-go/graph"
+
+	"github.com/ivanitskiy/graph-go/pkg/stack"
 )
 
-// SCC is 211 313 459 968 434821
 var (
-	in                    io.Reader = os.Stdin
-	out                   io.Writer = os.Stdout
-	filePath              string
-	finishingTime, leader map[int]int
-	t, s                  int
-	visited               map[int]bool
-	stack                 Stack
+	in       io.Reader = os.Stdin
+	out      io.Writer = os.Stdout
+	filePath string
+	leader   map[int]int
+	s        int
+	visited  map[int]bool
+	dfsStack stack.Stack
 )
 
 func checkError(e error) {
@@ -97,7 +97,6 @@ func main() {
 
 	visited = make(map[int]bool)
 	leader = make(map[int]int)
-	finishingTime = make(map[int]int)
 
 	order := make([]int, 0)
 
@@ -107,28 +106,12 @@ func main() {
 	sort.Sort(sort.Reverse(sort.IntSlice(order)))
 	dfsLoop(g.reverseEdges, order)
 
-	// visited = make(map[int]bool)
-	// for !stack.IsEmpty() {
-	// 	start, _ := stack.Pop()
-	// 	if _, ok := visited[start]; !ok {
-	// 		DFS(g.edges, start)
-	// 		fmt.Println("After DFS", start)
-
-	// 	}
-	// 	fmt.Println(start, "is visited")
-	// }
-
-	// Working below
 	fv := make([]int, 0)
 
-	for !stack.IsEmpty() {
-		value, _ := stack.Pop()
+	for !dfsStack.IsEmpty() {
+		value, _ := dfsStack.Pop()
 		fv = append(fv, value)
 	}
-	// for i, v := range finishingTime {
-	// 	fv[i-1] = v
-	// }
-	// sort.Sort(sort.Reverse(sort.IntSlice(stack)))
 	dfsLoop(g.edges, fv)
 
 	// Compute SCC
@@ -156,28 +139,16 @@ func DFS(adjacencyList map[int][]int, start int) {
 			DFS(adjacencyList, adj)
 		}
 	}
-	t++
-	finishingTime[start] = t
-	stack.Push(start)
+	dfsStack.Push(start)
 }
 
 func dfsLoop(aj map[int][]int, order []int) {
-	t = 0
 	s = 0
 	visited = make(map[int]bool)
-	// fmt.Println("Order", order)
 	for _, i := range order {
 		if _, ok := visited[i]; !ok {
 			s = i
 			DFS(aj, i)
 		}
 	}
-	// fmt.Println("Visited", visited)
-	// fmt.Println("current source vertex", s)
-	// fmt.Println("Number of nodes processed so far", t)
-	// fmt.Println("Leader", leader)
-	// fmt.Println("Edges", aj)
-	// fmt.Println("Stack", stack)
-	// fmt.Println("Finishing Time", finishingTime)
-	// fmt.Println("   **********  ")
 }

@@ -1,4 +1,4 @@
-package main
+package stack
 
 // Stack of int
 type Stack []int

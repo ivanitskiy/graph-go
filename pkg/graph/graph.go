@@ -1,6 +1,8 @@
 package graph
 
-import "sort"
+import (
+	"sort"
+)
 
 // ID is a unique ID of the Vertex/Node in the graph
 type ID int
@@ -12,11 +14,25 @@ func (a byID) Len() int           { return len(a) }
 func (a byID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byID) Less(i, j int) bool { return a[i] < a[j] }
 
+// AdjacencyList Graph representation
+type AdjacencyList [][]Edge
+
 // Graph representation using an adjancency map
+// no parallel edges supported
 type Graph struct {
 	vertices map[ID]struct{}
 	edges    map[ID]map[ID]struct{}
 	directed bool
+}
+
+// DirectedGraph is a directed graph
+type DirectedGraph struct {
+	Graph
+}
+
+// UndirectedGraph is a directed graph
+type UndirectedGraph struct {
+	Graph
 }
 
 // VertexCount returns the number of vertices in the graph
@@ -44,7 +60,8 @@ func (g *Graph) Edges() []Edge {
 	edges := make([]Edge, 0)
 	for from, v := range g.edges {
 		for to := range v {
-			e := &Edge{from, to}
+			e := &Edge{
+				From: from, To: to}
 			edges = append(edges, *e)
 		}
 	}
@@ -66,8 +83,8 @@ func (g *Graph) IncidentEdges(v ID) []Edge {
 	incidents := make([]Edge, 0)
 	for k := range g.edges[v] {
 		e := &Edge{
-			from: v,
-			to:   k,
+			From: v,
+			To:   k,
 		}
 		incidents = append(incidents, *e)
 	}
@@ -120,6 +137,29 @@ func (g *Graph) RemoveEdge(u, v ID) {
 	if !g.directed {
 		delete(g.edges[v], u)
 	}
+}
+
+// Reverse reverts the graph
+func (g *Graph) Reverse() {
+	reversedEdges := make(map[ID]map[ID]struct{})
+	for from := range g.edges {
+		for to := range g.edges[from] {
+
+			if _, ok := reversedEdges[to]; !ok {
+				reversedEdges[to] = make(map[ID]struct{})
+			}
+			reversedEdges[to][from] = struct{}{}
+
+			if !g.directed {
+				// For undirected graph add edge from v to u.
+				if _, ok := reversedEdges[from]; !ok {
+					reversedEdges[from] = make(map[ID]struct{})
+				}
+				reversedEdges[from][to] = struct{}{}
+			}
+		}
+	}
+	g.edges = reversedEdges
 }
 
 // // TopologicalSort returns a list  of vertices of dicrected acyclic graph g in topological order

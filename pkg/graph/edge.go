@@ -5,6 +5,7 @@ package graph
 //
 // type Edge map[ID]map[ID]struct{}
 type Edge struct {
-	from ID
-	to   ID
+	From   ID
+	To     ID
+	Weight int
 }

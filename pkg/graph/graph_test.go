@@ -343,3 +343,30 @@ func TestNewGraph(t *testing.T) {
 		})
 	}
 }
+
+func TestGraph_Reverse(t *testing.T) {
+	t.Run("reverse the graph", func(t *testing.T) {
+
+		g := NewGraph(true)
+		id1 := ID(1)
+		id2 := ID(2)
+		id3 := ID(3)
+		id4 := ID(4)
+
+		g.InsertEdge(id1, id2)
+		g.InsertEdge(id1, id4)
+		g.InsertEdge(id2, id3)
+		g.InsertEdge(id2, id4)
+		g.InsertEdge(id3, id1)
+		t.Log(g)
+
+		assert.Len(t, g.IncidentEdges(id1), 2, "Incorrect # of edges. Should be 2")
+		g.Reverse()
+		assert.Len(t, g.IncidentEdges(id1), 1, "u not found in the vertices")
+		assert.Equal(t, g.IncidentEdges(id1)[0].From, id1, "u not found in the vertices")
+		assert.Equal(t, g.IncidentEdges(id1)[0].To, id3, "u not found in the vertices")
+		t.Log(g)
+		g.Reverse()
+		t.Log(g)
+	})
+}
